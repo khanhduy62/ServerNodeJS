@@ -21,19 +21,13 @@ export const loginController = (req: Request, res: Response) => {
 
 export const registerController = async (
   req: Request<ParamsDictionary, unknown, RegisterRequestBody>,
-  res: Response
+  res: Response,
+  next: NextFunction
 ) => {
-  try {
-    const result = await usersService.register(req.body)
+  const result = await usersService.register(req.body)
 
-    return res.json({
-      message: 'register successfully',
-      result
-    })
-  } catch (error) {
-    console.log('log--error ', error)
-    return res.status(400).json({
-      message: 'register failed'
-    })
-  }
+  return res.json({
+    message: 'register successfully',
+    result
+  })
 }

@@ -1,5 +1,5 @@
 import dotenv from 'dotenv'
-import express from 'express'
+import express, { NextFunction, Request, RequestHandler, Response } from 'express'
 import bodyParser from 'body-parser'
 
 dotenv.config()
@@ -17,6 +17,12 @@ app.use(bodyParser.urlencoded({ extended: true })) // for parsing application/x-
 app.use('/users', usersRouter)
 
 databaseService.connect().catch(console.dir)
+
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  res.status(400).json({
+    message: err.message || 'Internal server error'
+  })
+})
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)

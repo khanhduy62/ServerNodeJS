@@ -6,6 +6,7 @@ dotenv.config()
 
 import databaseService from '~/services/database.services'
 import usersRouter from './routes/users.routers'
+import { defaultErrorHandler } from './middlewares/errors.middlewares'
 
 const app = express()
 const port = 3000
@@ -18,11 +19,7 @@ app.use('/users', usersRouter)
 
 databaseService.connect().catch(console.dir)
 
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  res.status(400).json({
-    message: err.message || 'Internal server error'
-  })
-})
+app.use(defaultErrorHandler)
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)

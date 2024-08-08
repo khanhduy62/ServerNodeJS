@@ -1,17 +1,23 @@
 import User from '~/models/schemas/User.schema'
 import databaseService from './database.services'
-import { RegisterRequestBody } from '~/models/requests/User.request'
+import { RegisterReqBody } from '~/models/requests/User.requests'
 import { hashPassword } from '~/utils/crypto'
-import { signToken } from '~/utils/jwt'
-import { TokenType } from '~/constants/enums'
+import { signToken, verifyToken } from '~/utils/jwt'
+import { TokenType, UserVerifyStatus } from '~/constants/enums'
+import { envConfig } from '~/constants/config'
+import RefreshToken from '~/models/schemas/RefreshToken.schema'
+import { ObjectId } from 'mongodb'
 
 class UsersService {
   private signAccessToken(user_id: string) {
     return signToken({
-      payload: { user_id, token_type: TokenType.AccessToken },
+      payload: {
+        user_id,
+        token_type: TokenType.AccessToken
+      },
+      privateKey: envConfig.jwtSecretAccessToken,
       options: {
-        expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN,
-        algorithm: 'HS256'
+        expiresIn: envConfig.accessTokenExpiresIn
       }
     })
   }
@@ -22,11 +28,12 @@ class UsersService {
       options: {
         expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN,
         algorithm: 'HS256'
-      }
+      },
+      privateKey: envConfig.jwtSecretRefreshToken
     })
   }
 
-  async register(payload: RegisterRequestBody) {
+  async register(payload: RegisterReqBody) {
     const result = await databaseService.users.insertOne(
       new User({
         ...payload,
@@ -52,6 +59,32 @@ class UsersService {
     const user = await databaseService.users.findOne({ email })
 
     return !!user
+  }
+
+  private signAccessAndRefreshToken({ user_id }: { user_id: string }) {
+    return Promise.all([this.signAccessToken(user_id), this.signRefreshToken(user_id)])
+  }
+
+  private decodeRefreshToken(refresh_token: string) {
+    return verifyToken({
+      token: refresh_token,
+      secretOrPublicKey: envConfig.jwtSecretRefreshToken
+    })
+  }
+
+  async login({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) {
+    const [access_token, refresh_token] = await this.signAccessAndRefreshToken({
+      user_id
+    })
+    const { iat, exp } = await this.decodeRefreshToken(refresh_token)
+
+    // await databaseService.refreshTokens.insertOne(
+    //   new RefreshToken({ user_id: new ObjectId(user_id), token: refresh_token, iat, exp })
+    // )
+    return {
+      access_token,
+      refresh_token
+    }
   }
 }
 

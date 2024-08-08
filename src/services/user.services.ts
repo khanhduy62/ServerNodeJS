@@ -44,10 +44,7 @@ class UsersService {
 
     const user_id = result.insertedId.toString()
 
-    const [access_token, refresh_token] = await Promise.all([
-      this.signAccessToken(user_id),
-      this.signRefreshToken(user_id)
-    ])
+    const [access_token, refresh_token] = await this.signAccessAndRefreshToken(user_id)
 
     return {
       access_token,
@@ -61,7 +58,7 @@ class UsersService {
     return !!user
   }
 
-  private signAccessAndRefreshToken({ user_id }: { user_id: string }) {
+  private signAccessAndRefreshToken(user_id: string) {
     return Promise.all([this.signAccessToken(user_id), this.signRefreshToken(user_id)])
   }
 
@@ -73,9 +70,7 @@ class UsersService {
   }
 
   async login({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) {
-    const [access_token, refresh_token] = await this.signAccessAndRefreshToken({
-      user_id
-    })
+    const [access_token, refresh_token] = await this.signAccessAndRefreshToken(user_id)
     const { iat, exp } = await this.decodeRefreshToken(refresh_token)
 
     // await databaseService.refreshTokens.insertOne(

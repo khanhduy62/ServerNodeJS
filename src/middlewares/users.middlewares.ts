@@ -1,10 +1,13 @@
 import express, { Request, Response, NextFunction } from 'express'
 import { checkSchema, ParamSchema } from 'express-validator'
+import { envConfig } from '~/constants/config'
+import HTTP_STATUS from '~/constants/httpStatus'
 import { USERS_MESSAGES } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/Errors'
 import databaseService from '~/services/database.services'
 import usersService from '~/services/user.services'
 import { hashPassword } from '~/utils/crypto'
+import { verifyToken } from '~/utils/jwt'
 import { validate } from '~/utils/validation'
 
 export const loginValidator = validate(
@@ -148,28 +151,65 @@ const dateOfBirthSchema: ParamSchema = {
 }
 
 export const registerValidator = validate(
-  checkSchema({
-    name: nameSchema,
-    email: {
-      notEmpty: true,
-      isEmail: {
-        errorMessage: USERS_MESSAGES.EMAIL_IS_INVALID
-      },
-      trim: true,
-      custom: {
-        options: async (value) => {
-          const userExists = await usersService.checkEmailExists(value)
+  checkSchema(
+    {
+      name: nameSchema,
+      email: {
+        notEmpty: true,
+        isEmail: {
+          errorMessage: USERS_MESSAGES.EMAIL_IS_INVALID
+        },
+        trim: true,
+        custom: {
+          options: async (value) => {
+            const userExists = await usersService.checkEmailExists(value)
 
-          if (userExists) {
-            throw new ErrorWithStatus({ message: USERS_MESSAGES.EMAIL_ALREADY_EXISTS, status: 500 })
+            if (userExists) {
+              throw new ErrorWithStatus({ message: USERS_MESSAGES.EMAIL_ALREADY_EXISTS, status: 500 })
+            }
+
+            return
           }
+        }
+      },
+      password: passwordSchema,
+      confirm_password: confirmPasswordSchema,
+      date_of_birth: dateOfBirthSchema
+    },
+    ['body']
+  )
+)
 
-          return
+export const accessTokenValidator = validate(
+  checkSchema(
+    {
+      Authorization: {
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED
+        },
+        custom: {
+          options: async (value: string, { req }) => {
+            const access_token = value.split(' ')[1]
+
+            if (!access_token) {
+              throw new ErrorWithStatus({
+                message: USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED,
+                status: HTTP_STATUS.UNAUTHORIZED
+              })
+            }
+
+            const decoded_authorization = await verifyToken({
+              token: access_token,
+              secretOrPublicKey: envConfig.jwtSecretAccessToken
+            })
+
+            req.decoded_authorization = decoded_authorization
+
+            return true
+          }
         }
       }
     },
-    password: passwordSchema,
-    confirm_password: confirmPasswordSchema,
-    date_of_birth: dateOfBirthSchema
-  })
+    ['headers']
+  )
 )

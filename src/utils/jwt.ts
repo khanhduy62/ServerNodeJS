@@ -1,9 +1,10 @@
 import jwt, { SignOptions } from 'jsonwebtoken'
+import { envConfig } from '~/constants/config'
 import { TokenPayload } from '~/models/requests/User.requests'
 
 export const signToken = ({
   payload,
-  privateKey = process.env.JWT_SECRET || 'private_key',
+  privateKey = envConfig.jwtSecretAccessToken || 'private_key',
   options = {
     algorithm: 'HS256'
   }

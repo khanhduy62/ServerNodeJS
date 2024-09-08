@@ -7,9 +7,10 @@ dotenv.config()
 import databaseService from '~/services/database.services'
 import usersRouter from './routes/users.routers'
 import { defaultErrorHandler } from './middlewares/errors.middlewares'
+import { envConfig } from './constants/config'
 
 const app = express()
-const port = 3000
+const port = envConfig.port
 
 // Use body-parser middleware
 app.use(bodyParser.json()) // for parsing application/json

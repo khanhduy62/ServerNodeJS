@@ -17,6 +17,10 @@ class MediasService {
         const newFullFilename = `${newName}.jpg`
         const newPath = path.resolve(UPLOAD_IMAGE_DIR, newFullFilename)
         await sharp(file.filepath).jpeg().toFile(newPath)
+
+        // remove file from local
+        await fsPromise.unlink(file.filepath)
+
         // const s3Result = await uploadFileToS3({
         //   filename: 'images/' + newFullFilename,
         //   filepath: newPath,

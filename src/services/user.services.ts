@@ -253,7 +253,6 @@ class UsersService {
         }
       }
     ])
-    console.log('log-forgot_password_token ', forgot_password_token)
     // await sendForgotPasswordEmail(email, forgot_password_token)
 
     return {

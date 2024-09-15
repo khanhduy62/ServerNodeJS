@@ -284,7 +284,6 @@ const forgotPasswordTokenSchema: ParamSchema = {
           secretOrPublicKey: envConfig.jwtSecretForgotPasswordToken
         })
         const { user_id } = decoded_forgot_password_token
-        console.log('log--decoded_forgot_password_token ', decoded_forgot_password_token)
         const user = await databaseService.users.findOne({ _id: new ObjectId(user_id) })
         if (user === null) {
           throw new ErrorWithStatus({

@@ -6,6 +6,7 @@ import fsPromise from 'fs/promises'
 import { UPLOAD_IMAGE_DIR, UPLOAD_VIDEO_DIR } from '~/constants/dir'
 import { MediaType } from '~/constants/enums'
 import sharp from 'sharp'
+import { envConfig, isProduction } from '~/constants/config'
 
 class MediasService {
   async uploadImage(req: Request) {
@@ -39,7 +40,9 @@ class MediasService {
         // }
 
         return {
-          url: newPath,
+          url: isProduction
+            ? `${envConfig.host}/static/image/${newFullFilename}`
+            : `http://localhost:${process.env.PORT}/static/image/${newFullFilename}`,
           type: MediaType.Image
         }
       })

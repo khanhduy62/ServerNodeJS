@@ -10,6 +10,7 @@ import mediasRouter from './routes/medias.routers'
 import { defaultErrorHandler } from './middlewares/errors.middlewares'
 import { envConfig } from './constants/config'
 import { initFolder } from './utils/file'
+import staticRouter from './routes/static.routes'
 
 const app = express()
 const port = envConfig.port
@@ -22,6 +23,7 @@ app.use(bodyParser.urlencoded({ extended: true })) // for parsing application/x-
 
 app.use('/users', usersRouter)
 app.use('/medias', mediasRouter)
+app.use('/static', staticRouter)
 
 databaseService.connect().catch(console.dir)
 

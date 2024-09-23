@@ -73,7 +73,6 @@ export const getFiles = (dir: string, files: string[] = []) => {
   return files
 }
 
-
 export const handleUploadVideo = async (req: Request) => {
   const form = formidable({
     uploadDir: UPLOAD_VIDEO_DIR,
@@ -99,10 +98,12 @@ export const handleUploadVideo = async (req: Request) => {
       }
       const videos = files.video as File[]
       videos.forEach((video) => {
-        const ext = getExtension(video.originalFilename as string)
-        fs.renameSync(video.filepath, video.filepath + '.' + ext)
-        video.newFilename = video.newFilename + '.' + ext
-        video.filepath = video.filepath + '.' + ext
+        if (!['mov', 'mp4'].includes(getExtension(video.newFilename as string))) {
+          const ext = getExtension(video.originalFilename as string)
+          fs.renameSync(video.filepath, video.filepath + '.' + ext)
+          video.newFilename = video.newFilename + '.' + ext
+          video.filepath = video.filepath + '.' + ext
+        }
       })
       resolve(files.video as File[])
     })

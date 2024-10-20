@@ -7,6 +7,7 @@ import { UPLOAD_IMAGE_DIR, UPLOAD_VIDEO_DIR } from '~/constants/dir'
 import { MediaType } from '~/constants/enums'
 import sharp from 'sharp'
 import { envConfig, isProduction } from '~/constants/config'
+import { encodeHLSWithMultipleVideoStreams } from '~/utils/video'
 
 class MediasService {
   async uploadImage(req: Request) {
@@ -62,6 +63,25 @@ class MediasService {
       }
     })
 
+    return result
+  }
+
+  async uploadVideoHLS(req: Request) {
+    const files = await handleUploadVideo(req)
+    console.log('log--files ', files)
+    const result: Media[] = await Promise.all(
+      files.map(async (file) => {
+        const newName = getNameFromFullname(file.newFilename)
+        await encodeHLSWithMultipleVideoStreams(file.filepath)
+        // queue.enqueue(file.filepath)
+        return {
+          url: isProduction
+            ? `${envConfig.host}/static/video-hls/${newName}/master.m3u8`
+            : `http://localhost:${envConfig.port}/static/video-hls/${newName}/master.m3u8`,
+          type: MediaType.HLS
+        }
+      })
+    )
     return result
   }
 }

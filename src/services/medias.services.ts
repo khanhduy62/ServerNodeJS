@@ -68,7 +68,6 @@ class MediasService {
 
   async uploadVideoHLS(req: Request) {
     const files = await handleUploadVideo(req)
-    console.log('log--files ', files)
     const result: Media[] = await Promise.all(
       files.map(async (file) => {
         const newName = getNameFromFullname(file.newFilename)
